@@ -78,6 +78,9 @@
 </template>
 
 <script>
+import { Toast } from '../utils/helpers'
+import authorizationAPI from './../apis/authorization'
+
 export default {
   data() {
     return {
@@ -88,14 +91,26 @@ export default {
     }
   },
   methods: {
-    handleSubmit() {
-      const data = JSON.stringify({
-        name: this.name,
-        email: this.email,
-        password: this.password,
-        passwordCheck: this.passwordCheck,
-      })
-      console.log(data)
+    async handleSubmit() {
+      try {
+        const { data } = await authorizationAPI.signUp({
+          name: this.name,
+          email: this.email,
+          password: this.password,
+          passwordCheck: this.passwordCheck,
+        })
+        console.log('data', data)
+        console.log('data')
+        if (data.status !== 'success') {
+          throw new Error(data.message)
+        }
+        this.$router.push({ name: 'sign-in' })
+      } catch (error) {
+        Toast.fire({
+          icon: 'warning',
+          title: '請確認您輸入了正確的帳號密碼',
+        })
+      }
     },
   },
 }

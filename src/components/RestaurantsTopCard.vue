@@ -3,7 +3,7 @@
     <div class="row no-gutters">
       <div class="col-md-4">
         <a href="#">
-          <img class="card-img" :src="restaurant.image" />
+          <img class="card-img" :src="restaurant.image | emptyImage" />
         </a>
       </div>
       <div class="col-md-8">
@@ -20,7 +20,7 @@
           <button
             type="button"
             class="btn btn-danger mr-2"
-            @click.stop.prevent="deleteFavorited"
+            @click.stop.prevent="deleteFavorited(restaurant.id)"
             v-if="restaurant.isFavorited"
           >
             移除最愛
@@ -28,7 +28,7 @@
           <button
             type="button"
             class="btn btn-primary"
-            @click.stop.prevent="addFavorited"
+            @click.stop.prevent="addFavorited(restaurant.id)"
             v-else
           >
             加到最愛
@@ -40,7 +40,13 @@
 </template>
 
 <script>
+import { emptyImageFilter } from './../utils/mixins'
+import usersAPI from './../apis/user'
+import { Toast } from './../utils/helpers'
+
 export default {
+  mixins: [emptyImageFilter],
+
   props: {
     initialRestaurant: {
       type: Object,
@@ -53,16 +59,54 @@ export default {
     }
   },
   methods: {
-    addFavorited() {
-      this.restaurant = {
-        ...this.restaurant, // 保留餐廳內原有資料
-        isFavorited: true,
+    // addFavorited() {
+    //   this.restaurant = {
+    //     ...this.restaurant, // 保留餐廳內原有資料
+    //     isFavorited: true,
+    //   }
+    // },
+    // deleteFavorited() {
+    //   this.restaurant = {
+    //     ...this.restaurant, // 保留餐廳內原有資料
+    //     isFavorited: false,
+    //   }
+    // },
+    async addFavorited(restaurantId) {
+      try {
+        const { data } = await usersAPI.addFavorite({ restaurantId })
+        if (data.status !== 'success') {
+          throw new Error(data.message)
+        }
+        this.restaurant = {
+          ...this.restaurant, // 保留餐廳內原有資料
+          isFavorited: true,
+        }
+        console.log('data', data)
+      } catch (error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法將餐廳加入最愛，請稍後再試',
+        })
+        console.log('error', error)
       }
     },
-    deleteFavorited() {
-      this.restaurant = {
-        ...this.restaurant, // 保留餐廳內原有資料
-        isFavorited: false,
+    async deleteFavorited(restaurantId) {
+      try {
+        const { data } = await usersAPI.deleteFavorite({ restaurantId })
+        if (data.status !== 'success') {
+          throw new Error(data.message)
+        }
+        this.restaurant = {
+          ...this.restaurant, // 保留餐廳內原有資料
+          isFavorited: false,
+        }
+        console.log('data', data)
+      } catch (error) {
+        Toast.fire({
+          icon: 'error',
+          title: '無法將餐廳移除最愛，請稍後再試',
+        })
+        console.log('error', error)
       }
     },
   },
